@@ -101,6 +101,7 @@ export default function App() {
       )}
       {page === 'bio' && bioUsername && (
         <BioPage
+          key={`bio-${bioUsername}-${Date.now()}`}
           username={bioUsername}
           onBack={() => {
             if (isLoggedIn) {

@@ -16,16 +16,19 @@ export default function BioPage({ username, onBack }: Props) {
   const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
 
   useEffect(() => {
-    if (user?.musicUrl) {
+    // Принудительное обновление из store при монтировании
+    const freshUser = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+    
+    if (freshUser?.musicUrl) {
       setShowWelcome(true);
       // Создаем аудио элемент
-      const audio = new Audio(user.musicUrl);
+      const audio = new Audio(freshUser.musicUrl);
       audio.loop = true;
       audio.volume = 0.7;
       audio.preload = 'auto';
       audioRef.current = audio;
       
-      console.log('Аудио создано:', user.musicUrl);
+      console.log('Аудио создано:', freshUser.musicUrl);
       
       return () => {
         if (audioRef.current) {
@@ -36,7 +39,7 @@ export default function BioPage({ username, onBack }: Props) {
     } else {
       setTimeout(() => setAnimIn(true), 50);
     }
-  }, [user]);
+  }, [username, users]);
 
   const handleEnter = () => {
     console.log('Кнопка "Открыть" нажата');
