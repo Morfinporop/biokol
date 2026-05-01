@@ -11,66 +11,56 @@ export default function BioPage({ username, onBack }: Props) {
   const { users } = useStore();
   const [animIn, setAnimIn] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
 
   useEffect(() => {
     if (user?.musicUrl) {
       setShowWelcome(true);
+      // Создаем аудио элемент
+      const audio = new Audio(user.musicUrl);
+      audio.loop = true;
+      audio.volume = 0.7;
+      audio.preload = 'auto';
+      audioRef.current = audio;
+      
+      console.log('Аудио создано:', user.musicUrl);
+      
+      return () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+      };
     } else {
       setTimeout(() => setAnimIn(true), 50);
     }
   }, [user]);
 
-  const handleEnter = async () => {
-    // Сначала загружаем аудио
+  const handleEnter = () => {
+    console.log('Кнопка "Открыть" нажата');
+    
     if (audioRef.current) {
-      try {
-        // Устанавливаем loop и громкость
-        audioRef.current.loop = true;
-        audioRef.current.volume = 0.7;
-        
-        // Загружаем аудио
-        audioRef.current.load();
-        
-        // Ждем пока загрузится
-        await new Promise((resolve) => {
-          if (audioRef.current) {
-            audioRef.current.addEventListener('canplaythrough', resolve, { once: true });
-          }
+      console.log('Аудио элемент найден, пытаемся воспроизвести...');
+      
+      // Запускаем воспроизведение
+      audioRef.current.play()
+        .then(() => {
+          console.log('✅ МУЗЫКА ИГРАЕТ!');
+          setShowWelcome(false);
+          setTimeout(() => setAnimIn(true), 100);
+        })
+        .catch((error) => {
+          console.error('❌ Ошибка воспроизведения:', error);
+          alert('Не удалось запустить музыку. Попробуйте обновить страницу.');
+          setShowWelcome(false);
+          setTimeout(() => setAnimIn(true), 100);
         });
-        
-        // Запускаем воспроизведение
-        const playPromise = audioRef.current.play();
-        
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            console.log('✓ Музыка воспроизводится');
-            setShowWelcome(false);
-            setTimeout(() => setAnimIn(true), 50);
-          }).catch((err) => {
-            console.log('Ошибка воспроизведения:', err);
-            // Все равно показываем страницу
-            setShowWelcome(false);
-            setTimeout(() => setAnimIn(true), 50);
-            
-            // Пытаемся еще раз через секунду
-            setTimeout(() => {
-              if (audioRef.current) {
-                audioRef.current.play().catch(e => console.log('Повторная попытка не удалась:', e));
-              }
-            }, 1000);
-          });
-        }
-      } catch (err) {
-        console.log('Ошибка загрузки аудио:', err);
-        setShowWelcome(false);
-        setTimeout(() => setAnimIn(true), 50);
-      }
     } else {
+      console.error('❌ Аудио элемент не найден');
       setShowWelcome(false);
-      setTimeout(() => setAnimIn(true), 50);
+      setTimeout(() => setAnimIn(true), 100);
     }
   };
 
@@ -137,12 +127,6 @@ export default function BioPage({ username, onBack }: Props) {
           </p>
         </div>
 
-        {/* Hidden audio */}
-        {user.musicUrl && (
-          <audio ref={audioRef} loop className="hidden">
-            <source src={user.musicUrl} />
-          </audio>
-        )}
       </div>
     );
   }
@@ -161,13 +145,6 @@ export default function BioPage({ username, onBack }: Props) {
           }}
         />
       ) : null}
-      
-      {/* Background music */}
-      {user.musicUrl && (
-        <audio ref={audioRef} loop preload="auto" className="hidden">
-          <source src={user.musicUrl} />
-        </audio>
-      )}
 
       {/* Background glow */}
       <div className="absolute inset-0 z-0">
