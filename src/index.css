@@ -122,6 +122,20 @@ input:-webkit-autofill:focus {
   animation: fade-in 0.4s ease forwards;
 }
 
+/* GPU acceleration for backgrounds */
+.gpu-accelerated {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Optimize GIF rendering */
+img, video, iframe {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
 /* Number input arrows hide */
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button {

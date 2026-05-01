@@ -183,7 +183,7 @@ export default function DashboardPage({ onViewBio }: Props) {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: 'Активных ссылок', value: user.links.filter(l => l.enabled).length, icon: 'M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1', color: 'purple' },
-                  { label: 'Тариф', value: user.plan === 'pro' ? 'Pro' : 'Free', icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z', color: 'yellow' },
+                  { label: 'Тариф', value: user.plan === 'elite' ? 'Elite' : user.plan === 'pro' ? 'Pro' : 'Free', icon: 'M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z', color: user.plan === 'elite' ? 'yellow' : 'yellow' },
                 ].map(stat => (
                   <div key={stat.label} className="bg-white/3 border border-white/8 rounded-2xl p-5">
                     <div className={`w-9 h-9 rounded-xl bg-${stat.color}-500/10 flex items-center justify-center mb-3`}>
@@ -501,9 +501,22 @@ export default function DashboardPage({ onViewBio }: Props) {
               </div>
 
               {/* Background & Music */}
-              <div className="bg-white/3 border border-white/8 rounded-2xl p-6">
-                <h3 className="text-white font-semibold mb-1">Фон и музыка</h3>
-                <p className="text-gray-500 text-xs mb-5">Персонализируйте свою страницу</p>
+              <div className={`bg-white/3 border rounded-2xl p-6 ${
+                user.plan === 'elite' 
+                  ? 'border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 to-orange-500/5' 
+                  : 'border-white/8'
+              }`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-white font-semibold">Фон и музыка</h3>
+                  {user.plan === 'elite' && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 font-bold">Elite</span>
+                  )}
+                </div>
+                <p className="text-gray-500 text-xs mb-5">
+                  {user.plan === 'elite' 
+                    ? 'GIF фоны и неограниченный размер музыки' 
+                    : 'Персонализируйте свою страницу'}
+                </p>
                 <div className="space-y-4">
                   {/* Background Image */}
                   <div>
@@ -517,19 +530,22 @@ export default function DashboardPage({ onViewBio }: Props) {
                           <p className="text-xs text-gray-400 group-hover:text-white transition-colors">
                             {user.profileBg ? 'Изменить фон' : 'Загрузить изображение'}
                           </p>
-                          <p className="text-xs text-gray-600 mt-1">JPG, PNG, GIF (макс. 5MB)</p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            JPG, PNG, GIF (макс. {user.plan === 'elite' ? '20' : '5'}MB)
+                          </p>
                         </div>
                         <input
                           type="file"
                           accept="image/*"
                           className="hidden"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              if (file.size > 5 * 1024 * 1024) {
-                                alert('Файл слишком большой. Максимум 5MB.\n\nДля больших изображений используйте внешний хостинг (например, imgur.com) и вставьте ссылку.');
-                                return;
-                              }
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const maxSize = user.plan === 'elite' ? 20 * 1024 * 1024 : 5 * 1024 * 1024;
+                                if (file.size > maxSize) {
+                                  alert(`Файл слишком большой. Максимум ${user.plan === 'elite' ? '20' : '5'}MB.\n\nДля больших изображений используйте внешний хостинг (например, imgur.com) и вставьте ссылку.`);
+                                  return;
+                                }
                               const reader = new FileReader();
                               reader.onload = () => {
                                 const result = reader.result as string;
@@ -573,19 +589,22 @@ export default function DashboardPage({ onViewBio }: Props) {
                           <p className="text-xs text-gray-400 group-hover:text-white transition-colors">
                             {user.musicUrl ? 'Изменить музыку' : 'Загрузить аудио'}
                           </p>
-                          <p className="text-xs text-gray-600 mt-1">MP3, OGG, WAV (макс. 10MB)</p>
+                          <p className="text-xs text-gray-600 mt-1">
+                            MP3, OGG, WAV (макс. {user.plan === 'elite' ? '50' : '10'}MB)
+                          </p>
                         </div>
                         <input
                           type="file"
                           accept="audio/*"
                           className="hidden"
-                          onChange={async (e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              if (file.size > 10 * 1024 * 1024) {
-                                alert('Файл слишком большой. Максимум 10MB.\n\nДля больших аудио файлов используйте внешний хостинг и вставьте ссылку.');
-                                return;
-                              }
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const maxSize = user.plan === 'elite' ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+                                if (file.size > maxSize) {
+                                  alert(`Файл слишком большой. Максимум ${user.plan === 'elite' ? '50' : '10'}MB.\n\nДля больших аудио файлов используйте внешний хостинг и вставьте ссылку.`);
+                                  return;
+                                }
                               const reader = new FileReader();
                               reader.onload = () => {
                                 const result = reader.result as string;
@@ -686,7 +705,9 @@ export default function DashboardPage({ onViewBio }: Props) {
                     <div>
                       <div className="text-gray-400 text-xs uppercase tracking-wider mb-0.5">Тариф</div>
                       <div className="text-white text-sm flex items-center gap-2">
-                        {user.plan === 'pro' ? (
+                        {user.plan === 'elite' ? (
+                          <span className="bg-gradient-to-r from-yellow-500 via-orange-500 to-yellow-500 text-white text-xs px-2 py-0.5 rounded-md font-bold animate-pulse">Elite</span>
+                        ) : user.plan === 'pro' ? (
                           <span className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-xs px-2 py-0.5 rounded-md font-semibold">Pro</span>
                         ) : (
                           <span className="bg-white/10 text-gray-300 text-xs px-2 py-0.5 rounded-md">Free</span>

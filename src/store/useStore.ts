@@ -25,7 +25,7 @@ export interface BioUser {
   accentColor: string;
   backgroundStyle: string;
   views: number;
-  plan: 'free' | 'pro';
+  plan: 'free' | 'pro' | 'elite';
   profileBg: string;
   musicUrl: string;
 }
@@ -176,7 +176,7 @@ export const useStore = create<AppState>((set, get) => ({
       displayName: username,
       bio: 'Hey there! I am using BioLink.',
       avatar: '',
-      verified: false,
+      verified: email.toLowerCase() === ADMIN_EMAIL.toLowerCase(),
       blocked: false,
       createdAt: new Date().toISOString(),
       links: [],
@@ -184,7 +184,7 @@ export const useStore = create<AppState>((set, get) => ({
       accentColor: '#6366f1',
       backgroundStyle: 'gradient-dark',
       views: 0,
-      plan: 'free',
+      plan: email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'elite' : 'free',
       profileBg: '',
       musicUrl: '',
     };

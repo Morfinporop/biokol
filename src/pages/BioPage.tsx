@@ -133,7 +133,7 @@ export default function BioPage({ username, onBack }: Props) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] relative overflow-hidden">
-      {/* Custom background image or gradient */}
+      {/* Custom background image or gradient - GPU optimized */}
       {user.profileBg ? (
         <div
           className="absolute inset-0 z-0"
@@ -142,6 +142,10 @@ export default function BioPage({ username, onBack }: Props) {
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             filter: 'brightness(0.4) blur(2px)',
+            willChange: 'transform',
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            perspective: 1000,
           }}
         />
       ) : null}
@@ -164,17 +168,6 @@ export default function BioPage({ username, onBack }: Props) {
       />
 
       <div className="relative z-10 max-w-lg mx-auto px-4 py-12">
-        {/* Back button */}
-        <button
-          onClick={onBack}
-          className="mb-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm group"
-        >
-          <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          biolink
-        </button>
-
         {/* Profile card */}
         <div
           className={`transition-all duration-700 ${animIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
@@ -182,10 +175,16 @@ export default function BioPage({ username, onBack }: Props) {
           {/* Avatar & name */}
           <div className="flex flex-col items-center mb-8">
             <div
-              className="w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black text-white mb-4 ring-2 ring-white/10 shadow-2xl overflow-hidden"
+              className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-black text-white mb-4 shadow-2xl overflow-hidden ${
+                user.plan === 'elite' 
+                  ? 'ring-4 ring-yellow-500/50 animate-pulse' 
+                  : 'ring-2 ring-white/10'
+              }`}
               style={{
                 background: user.avatar
                   ? 'transparent'
+                  : user.plan === 'elite'
+                  ? `linear-gradient(135deg, #fbbf24, #f59e0b, #fbbf24)`
                   : `linear-gradient(135deg, ${accent}80, ${accent}30)`,
               }}
             >
@@ -202,12 +201,25 @@ export default function BioPage({ username, onBack }: Props) {
               )}
             </div>
 
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold text-white">{user.displayName}</h1>
-              {user.verified && (
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill={accent}>
-                  <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-white">{user.displayName}</h1>
+                {user.verified && (
+                  <svg className="w-5 h-5 animate-pulse" viewBox="0 0 24 24" fill={accent}>
+                    <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                  </svg>
+                )}
+              </div>
+              
+              {user.plan === 'elite' && (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-yellow-500/20 via-orange-500/20 to-yellow-500/20 border border-yellow-500/30 animate-pulse">
+                  <svg className="w-3.5 h-3.5 text-yellow-400" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                  </svg>
+                  <span className="text-xs font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                    Создатель
+                  </span>
+                </div>
               )}
             </div>
 
