@@ -13,17 +13,10 @@ export default function App() {
   const [page, setPage] = useState<Page>('landing');
   const [bioUsername, setBioUsername] = useState<string>('');
 
-  // Загрузка пользователей при старте
-  useEffect(() => {
-    loadUsers();
-  }, [loadUsers]);
-
-  // Handle URL routing for bio pages: bio.o/username pattern
-  useEffect(() => {
+  const parseRoute = () => {
     const path = window.location.pathname;
-    // Parse /bio/username or /u/username routes
-    const bioMatch = path.match(/^\/(?:bio\/|u\/|@)?([a-zA-Z0-9_]{3,20})$/);
-    if (bioMatch && bioMatch[1] && bioMatch[1] !== 'auth' && bioMatch[1] !== 'dashboard' && bioMatch[1] !== 'admin') {
+    const bioMatch = path.match(/^\/(?:bio\/|u\/|@|bio\.o\/)?([a-zA-Z0-9_]{3,20})$/);
+    if (bioMatch && bioMatch[1] && !['auth', 'dashboard', 'admin'].includes(bioMatch[1])) {
       setBioUsername(bioMatch[1]);
       setPage('bio');
       return;
@@ -43,7 +36,21 @@ export default function App() {
       else setPage('auth');
       return;
     }
-  }, []);
+    setPage('landing');
+  };
+
+  // Загрузка пользователей при старте
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
+
+  // Handle URL routing for bio pages
+  useEffect(() => {
+    parseRoute();
+    const onPop = () => parseRoute();
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [isLoggedIn, isAdmin]);
 
   const navigateTo = (p: Page, username?: string) => {
     if (p === 'bio' && username) {
@@ -106,7 +113,7 @@ export default function App() {
       )}
       {page === 'bio' && bioUsername && (
         <BioPage
-          key={`bio-${bioUsername}-${Date.now()}`}
+          key={`bio-${bioUsername}`}
           username={bioUsername}
           onBack={() => {
             if (isLoggedIn) {

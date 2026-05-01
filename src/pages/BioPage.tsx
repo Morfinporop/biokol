@@ -16,6 +16,15 @@ export default function BioPage({ username, onBack }: Props) {
   const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
 
   useEffect(() => {
+    if (user) {
+      document.title = `${user.username} - BioLink`;
+    }
+    return () => {
+      document.title = 'BioLink — Ссылки под рукой';
+    };
+  }, [user]);
+
+  useEffect(() => {
     // Принудительное обновление из store при монтировании
     const freshUser = users.find(u => u.username.toLowerCase() === username.toLowerCase());
     
@@ -79,7 +88,7 @@ export default function BioPage({ username, onBack }: Props) {
       <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center gap-4">
         <div className="text-6xl font-black text-white/10">404</div>
         <div className="text-white text-xl font-semibold">Пользователь не найден</div>
-        <p className="text-gray-500 text-sm">bio.o/{username} не существует</p>
+        <p className="text-gray-500 text-sm">@{username} не существует</p>
         <button onClick={onBack} className="mt-4 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium transition-all">
           На главную
         </button>
@@ -171,6 +180,15 @@ export default function BioPage({ username, onBack }: Props) {
       />
 
       <div className="relative z-10 max-w-lg mx-auto px-4 py-12">
+        <button
+          onClick={onBack}
+          className="mb-8 flex items-center gap-2 text-gray-400 hover:text-white transition-colors text-sm group"
+        >
+          <svg className="w-4 h-4 group-hover:-translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          Назад
+        </button>
         {/* Profile card */}
         <div
           className={`transition-all duration-700 ${animIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}

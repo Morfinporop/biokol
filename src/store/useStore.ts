@@ -117,7 +117,14 @@ export const useStore = create<AppState>((set, get) => ({
   
   loadUsers: async () => {
     const users = await api.fetchAllUsers();
-    set({ users });
+    set((s) => {
+      const syncedCurrentUser = s.currentUser
+        ? users.find((u) => u.id === s.currentUser?.id) || s.currentUser
+        : null;
+      const ns = { ...s, users, currentUser: syncedCurrentUser };
+      saveState(ns);
+      return ns;
+    });
   },
 
   login: async (email, password) => {
@@ -170,80 +177,95 @@ export const useStore = create<AppState>((set, get) => ({
   },
 
   addLink: (link) => {
-    set(s => {
-      const newLink: SocialLink = {
-        ...link,
-        id: `link-${Date.now()}`,
-        order: s.currentUser!.links.length,
-      };
-      const updated = { ...s.currentUser!, links: [...s.currentUser!.links, newLink] };
-      const users = s.users.map(u => u.id === updated.id ? updated : u);
-      const ns = { ...s, currentUser: updated, users };
-      saveState(ns);
-      return ns;
+    const state = get();
+    if (!state.currentUser) return;
+    const newLink: SocialLink = {
+      ...link,
+      id: `link-${Date.now()}`,
+      order: state.currentUser.links.length,
+    };
+    const updated = { ...state.currentUser, links: [...state.currentUser.links, newLink] };
+    const users = state.users.map((u) => (u.id === updated.id ? updated : u));
+    const ns = { ...state, currentUser: updated, users };
+    set(ns);
+    saveState(ns);
+    api.updateUserProfile(updated.id, { links: updated.links }).then((fresh) => {
+      if (!fresh) return;
+      set((s) => {
+        const nextUsers = s.users.map((u) => (u.id === fresh.id ? fresh : u));
+        const next = { ...s, currentUser: fresh, users: nextUsers };
+        saveState(next);
+        return next;
+      });
     });
   },
 
   updateLink: (id, data) => {
-    set(s => {
-      const links = s.currentUser!.links.map(l => l.id === id ? { ...l, ...data } : l);
-      const updated = { ...s.currentUser!, links };
-      const users = s.users.map(u => u.id === updated.id ? updated : u);
-      const ns = { ...s, currentUser: updated, users };
-      saveState(ns);
-      return ns;
-    });
+    const state = get();
+    if (!state.currentUser) return;
+    const links = state.currentUser.links.map((l) => (l.id === id ? { ...l, ...data } : l));
+    const updated = { ...state.currentUser, links };
+    const users = state.users.map((u) => (u.id === updated.id ? updated : u));
+    const ns = { ...state, currentUser: updated, users };
+    set(ns);
+    saveState(ns);
+    api.updateUserProfile(updated.id, { links: updated.links });
   },
 
   removeLink: (id) => {
-    set(s => {
-      const links = s.currentUser!.links.filter(l => l.id !== id);
-      const updated = { ...s.currentUser!, links };
-      const users = s.users.map(u => u.id === updated.id ? updated : u);
-      const ns = { ...s, currentUser: updated, users };
-      saveState(ns);
-      return ns;
-    });
+    const state = get();
+    if (!state.currentUser) return;
+    const links = state.currentUser.links.filter((l) => l.id !== id);
+    const updated = { ...state.currentUser, links };
+    const users = state.users.map((u) => (u.id === updated.id ? updated : u));
+    const ns = { ...state, currentUser: updated, users };
+    set(ns);
+    saveState(ns);
+    api.updateUserProfile(updated.id, { links: updated.links });
   },
 
   reorderLinks: (links) => {
-    set(s => {
-      const updated = { ...s.currentUser!, links };
-      const users = s.users.map(u => u.id === updated.id ? updated : u);
-      const ns = { ...s, currentUser: updated, users };
-      saveState(ns);
-      return ns;
-    });
+    const state = get();
+    if (!state.currentUser) return;
+    const updated = { ...state.currentUser, links };
+    const users = state.users.map((u) => (u.id === updated.id ? updated : u));
+    const ns = { ...state, currentUser: updated, users };
+    set(ns);
+    saveState(ns);
+    api.updateUserProfile(updated.id, { links: updated.links });
   },
 
   setCurrentPage: (page) => set({ currentPage: page }),
   setViewingBio: (username) => set({ viewingBio: username }),
 
   blockUser: (userId) => {
-    set(s => {
-      const users = s.users.map(u => u.id === userId ? { ...u, blocked: true } : u);
+    set((s) => {
+      const users = s.users.map((u) => (u.id === userId ? { ...u, blocked: true } : u));
       const ns = { ...s, users };
       saveState(ns);
       return ns;
     });
+    api.blockUserById(userId);
   },
 
   unblockUser: (userId) => {
-    set(s => {
-      const users = s.users.map(u => u.id === userId ? { ...u, blocked: false } : u);
+    set((s) => {
+      const users = s.users.map((u) => (u.id === userId ? { ...u, blocked: false } : u));
       const ns = { ...s, users };
       saveState(ns);
       return ns;
     });
+    api.unblockUserById(userId);
   },
 
   deleteUser: (userId) => {
-    set(s => {
-      const users = s.users.filter(u => u.id !== userId);
+    set((s) => {
+      const users = s.users.filter((u) => u.id !== userId);
       const ns = { ...s, users };
       saveState(ns);
       return ns;
     });
+    api.deleteUserById(userId);
   },
 
   incrementViews: (username) => {
