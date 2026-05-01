@@ -6,6 +6,7 @@ export interface ApiResponse<T = any> {
   error?: string;
   user?: T;
   users?: T[];
+  isAdmin?: boolean;
 }
 
 // Получить всех пользователей

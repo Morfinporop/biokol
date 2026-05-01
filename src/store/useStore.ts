@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import * as api from '../services/api';
 
 export interface SocialLink {
   id: string;
@@ -37,11 +38,12 @@ interface AppState {
   isAdmin: boolean;
   currentPage: string;
   viewingBio: string | null;
-
-  login: (email: string, password: string) => { success: boolean; message: string };
-  register: (email: string, username: string, password: string) => { success: boolean; message: string };
+  
+  loadUsers: () => Promise<void>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string; isAdmin?: boolean }>;
+  register: (email: string, username: string, password: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
-  updateBio: (data: Partial<BioUser>) => void;
+  updateBio: (data: Partial<BioUser>) => Promise<void>;
   addLink: (link: Omit<SocialLink, 'id' | 'order'>) => void;
   updateLink: (id: string, data: Partial<SocialLink>) => void;
   removeLink: (id: string) => void;
@@ -53,9 +55,6 @@ interface AppState {
   deleteUser: (userId: string) => void;
   incrementViews: (username: string) => void;
 }
-
-const ADMIN_EMAIL = 'energoferon41@gmail.com';
-const ADMIN_PASSWORD = '2255';
 
 // Demo user for preview
 const demoUser: BioUser = {
@@ -115,92 +114,36 @@ export const useStore = create<AppState>((set, get) => ({
   isAdmin: saved?.isAdmin || false,
   currentPage: 'home',
   viewingBio: null,
-
-  login: (email, password) => {
-    // Проверка админского пароля для админ панели
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      const adminUser = get().users.find(u => u.email === ADMIN_EMAIL);
-      if (!adminUser) return { success: false, message: 'Пользователь не найден' };
-      set(s => {
-        const ns = { ...s, currentUser: adminUser, isLoggedIn: true, isAdmin: true };
-        saveState(ns);
-        return ns;
-      });
-      return { success: true, message: 'Добро пожаловать, Admin!' };
-    }
-    // Для обычного входа с админским емейлом
-    if (email === ADMIN_EMAIL) {
-      const adminUser = get().users.find(u => u.email === ADMIN_EMAIL);
-      if (!adminUser) return { success: false, message: 'Пользователь не найден' };
-      const storedPass = localStorage.getItem(`pass_${adminUser.id}`);
-      if (!storedPass || storedPass !== password) return { success: false, message: 'Неверный пароль' };
-      set(s => {
-        const ns = { ...s, currentUser: adminUser, isLoggedIn: true, isAdmin: false };
-        saveState(ns);
-        return ns;
-      });
-      return { success: true, message: 'Вход выполнен!' };
-    }
-    const user = get().users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!user) return { success: false, message: 'Пользователь не найден' };
-    if (user.blocked) return { success: false, message: 'Аккаунт заблокирован' };
-    const storedPass = localStorage.getItem(`pass_${user.id}`);
-    if (storedPass !== password) return { success: false, message: 'Неверный пароль' };
-    set(s => {
-      const ns = { ...s, currentUser: user, isLoggedIn: true, isAdmin: false };
-      saveState(ns);
-      return ns;
-    });
-    return { success: true, message: 'Вход выполнен!' };
+  
+  loadUsers: async () => {
+    const users = await api.fetchAllUsers();
+    set({ users });
   },
 
-  register: (email, username, password) => {
-    const state = get();
-    // Для админского email разрешаем регистрацию если еще нет аккаунта
-    const existingUser = state.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (existingUser && email.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-      return { success: false, message: 'Email уже используется' };
+  login: async (email, password) => {
+    const result = await api.loginUser(email, password);
+    if (result.success && result.user) {
+      await get().loadUsers();
+      set(s => {
+        const ns = { ...s, currentUser: result.user, isLoggedIn: true, isAdmin: result.isAdmin || false };
+        saveState(ns);
+        return ns;
+      });
     }
-    // Если это админский email и уже есть аккаунт, не даем зарегистрировать повторно
-    if (existingUser && email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-      return { success: false, message: 'Email уже используется' };
+    return { success: result.success, message: result.message || '', isAdmin: result.isAdmin };
+  },
+
+  register: async (email, username, password) => {
+    const result = await api.registerUser(email, username, password);
+    if (result.success && result.user) {
+      await get().loadUsers();
+      set(s => {
+        const ns = { ...s, currentUser: result.user, isLoggedIn: true, isAdmin: false };
+        saveState(ns);
+        return ns;
+      });
     }
-    const usernameExists = state.users.some(u => u.username.toLowerCase() === username.toLowerCase());
-    if (usernameExists) return { success: false, message: 'Имя пользователя занято' };
-    if (username.length < 3) return { success: false, message: 'Имя пользователя минимум 3 символа' };
-    if (password.length < 6) return { success: false, message: 'Пароль минимум 6 символов' };
-    const newUser: BioUser = {
-      id: `user-${Date.now()}`,
-      username: username.toLowerCase(),
-      email,
-      displayName: username,
-      bio: 'Hey there! I am using BioLink.',
-      avatar: '',
-      verified: email.toLowerCase() === ADMIN_EMAIL.toLowerCase(),
-      blocked: false,
-      createdAt: new Date().toISOString(),
-      links: [],
-      theme: 'dark',
-      accentColor: '#6366f1',
-      backgroundStyle: 'gradient-dark',
-      views: 0,
-      plan: email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'elite' : 'free',
-      profileBg: '',
-      musicUrl: '',
-    };
-    localStorage.setItem(`pass_${newUser.id}`, password);
-    set(s => {
-      const ns = {
-        ...s,
-        users: [...s.users, newUser],
-        currentUser: newUser,
-        isLoggedIn: true,
-        isAdmin: false,
-      };
-      saveState(ns);
-      return ns;
-    });
-    return { success: true, message: 'Аккаунт создан!' };
+    return { success: result.success, message: result.message || '' };
   },
 
   logout: () => {
@@ -211,14 +154,19 @@ export const useStore = create<AppState>((set, get) => ({
     });
   },
 
-  updateBio: (data) => {
-    set(s => {
-      const updated = { ...s.currentUser!, ...data };
-      const users = s.users.map(u => u.id === updated.id ? updated : u);
-      const ns = { ...s, currentUser: updated, users };
-      saveState(ns);
-      return ns;
-    });
+  updateBio: async (data) => {
+    const currentUser = get().currentUser;
+    if (!currentUser) return;
+    
+    const updatedUser = await api.updateUserProfile(currentUser.id, data);
+    if (updatedUser) {
+      await get().loadUsers();
+      set(s => {
+        const ns = { ...s, currentUser: updatedUser, users: s.users.map(u => u.id === updatedUser.id ? updatedUser : u) };
+        saveState(ns);
+        return ns;
+      });
+    }
   },
 
   addLink: (link) => {

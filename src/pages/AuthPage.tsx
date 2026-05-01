@@ -60,7 +60,7 @@ export default function AuthPage({ onSuccess, onBack }: Props) {
     await new Promise(r => setTimeout(r, 600));
 
     if (mode === 'login') {
-      const result = login(email, password);
+      const result = await login(email, password);
       if (result.success) {
         setSuccess(result.message);
         setTimeout(onSuccess, 800);
@@ -75,7 +75,7 @@ export default function AuthPage({ onSuccess, onBack }: Props) {
         setLoading(false);
         return;
       }
-      const result = register(email, username, password);
+      const result = await register(email, username, password);
       if (result.success) {
         setSuccess(result.message);
         setTimeout(onSuccess, 800);

@@ -9,9 +9,14 @@ import BioPage from './pages/BioPage';
 type Page = 'landing' | 'auth' | 'dashboard' | 'admin' | 'bio';
 
 export default function App() {
-  const { isLoggedIn, isAdmin, setViewingBio } = useStore();
+  const { isLoggedIn, isAdmin, setViewingBio, loadUsers } = useStore();
   const [page, setPage] = useState<Page>('landing');
   const [bioUsername, setBioUsername] = useState<string>('');
+
+  // Загрузка пользователей при старте
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   // Handle URL routing for bio pages: bio.o/username pattern
   useEffect(() => {
