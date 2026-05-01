@@ -28,18 +28,26 @@ app.use((req, res, next) => {
 app.use('/api', apiRouter);
 
 // Статические файлы
-app.use('/logo.png', (req, res) => {
-  res.sendFile(join(__dirname, 'public', 'logo.png'));
+app.get('/logo.png', (req, res) => {
+  try {
+    res.sendFile(join(__dirname, 'public', 'logo.png'));
+  } catch (error) {
+    res.status(404).send('Logo not found');
+  }
 });
 
-// SPA - все остальные запросы отдаем index.html
-app.get('*', (req, res) => {
-  const html = readFileSync(join(__dirname, 'dist', 'index.html'), 'utf-8');
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.send(html);
+// SPA - все остальные запросы отдаем index.html (используем regex вместо *)
+app.use((req, res) => {
+  try {
+    const html = readFileSync(join(__dirname, 'dist', 'index.html'), 'utf-8');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.send(html);
+  } catch (error) {
+    res.status(500).send('Server error');
+  }
 });
 
 app.listen(PORT, '0.0.0.0', () => {

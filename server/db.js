@@ -8,8 +8,36 @@ const DB_PATH = path.join(__dirname, 'database.json');
 // Инициализация базы данных
 function initDB() {
   if (!fs.existsSync(DB_PATH)) {
+    const demoUser = {
+      id: 'demo-user',
+      username: 'demo',
+      email: 'demo@biolink.app',
+      displayName: 'Demo User',
+      bio: 'Это демо профиль! Посмотрите как работает BioLink. Создайте свой бесплатно!',
+      avatar: '',
+      verified: true,
+      blocked: false,
+      createdAt: new Date().toISOString(),
+      links: [
+        { id: 'd1', platform: 'github', url: 'https://github.com', label: 'GitHub', icon: 'github', enabled: true, order: 0 },
+        { id: 'd2', platform: 'twitter', url: 'https://twitter.com', label: 'Twitter / X', icon: 'twitter', enabled: true, order: 1 },
+        { id: 'd3', platform: 'instagram', url: 'https://instagram.com', label: 'Instagram', icon: 'instagram', enabled: true, order: 2 },
+        { id: 'd4', platform: 'youtube', url: 'https://youtube.com', label: 'YouTube', icon: 'youtube', enabled: true, order: 3 },
+        { id: 'd5', platform: 'telegram', url: 'https://t.me', label: 'Telegram', icon: 'telegram', enabled: true, order: 4 },
+        { id: 'd6', platform: 'discord', url: 'https://discord.gg', label: 'Discord', icon: 'discord', enabled: true, order: 5 },
+      ],
+      theme: 'dark',
+      accentColor: '#8b5cf6',
+      backgroundStyle: 'gradient-dark',
+      views: 0,
+      plan: 'free',
+      profileBg: '',
+      musicUrl: '',
+      password: 'demo123'
+    };
+    
     const initialData = {
-      users: [],
+      users: [demoUser],
       lastUpdate: new Date().toISOString()
     };
     fs.writeFileSync(DB_PATH, JSON.stringify(initialData, null, 2));
