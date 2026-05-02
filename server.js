@@ -36,8 +36,9 @@ app.get('/logo.png', (req, res) => {
   }
 });
 
-// SPA - все запросы отдаем index.html
-app.get('*', (req, res) => {
+// SPA - используем app.use() вместо app.get('*', ...)
+// Это обрабатывает все GET запросы которые не совпали с другими роутами
+app.use((req, res) => {
   try {
     const html = readFileSync(join(__dirname, 'dist', 'index.html'), 'utf-8');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
