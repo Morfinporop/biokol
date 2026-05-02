@@ -182,3 +182,52 @@ export async function setAdminPassword(userId: string, adminPassword: string) {
     return { success: false, message: 'Ошибка сети' };
   }
 }
+
+// ===== MESSAGING API =====
+
+export async function getChatList(userId: string) {
+  try {
+    const res = await apiRequest(`${API_URL}/chats/${userId}`);
+    const data: ApiResponse = await res.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting chat list:', error);
+    return { success: false, message: 'Ошибка сети' };
+  }
+}
+
+export async function getMessages(user1Id: string, user2Id: string) {
+  try {
+    const res = await apiRequest(`${API_URL}/messages/${user1Id}/${user2Id}`);
+    const data: ApiResponse = await res.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting messages:', error);
+    return { success: false, message: 'Ошибка сети' };
+  }
+}
+
+export async function sendMessage(data: { from: string; to: string; text: string; type?: string }) {
+  try {
+    const res = await apiRequest(`${API_URL}/messages`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+    const result: ApiResponse = await res.json();
+    return result;
+  } catch (error) {
+    console.error('Error sending message:', error);
+    return { success: false, message: 'Ошибка сети' };
+  }
+}
+
+export async function searchUsers(currentUserId: string) {
+  try {
+    const res = await apiRequest(`${API_URL}/users/search/${currentUserId}`);
+    const data: ApiResponse = await res.json();
+    return data;
+  } catch (error) {
+    console.error('Error searching users:', error);
+    return { success: false, message: 'Ошибка сети' };
+  }
+}

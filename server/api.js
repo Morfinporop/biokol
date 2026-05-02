@@ -8,6 +8,13 @@ import {
   deleteUser,
   getUserById
 } from './db.js';
+import {
+  getMessages,
+  sendMessage,
+  markMessagesRead,
+  getChatList,
+  getAllUsersExcept
+} from './messages.js';
 
 const router = express.Router();
 
@@ -232,6 +239,56 @@ router.post('/users/:userId/unblock', (req, res) => {
     } else {
       res.status(404).json({ success: false, error: 'User not found' });
     }
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ===== MESSAGING API =====
+
+// Получить список чатов
+router.get('/chats/:userId', (req, res) => {
+  try {
+    const { userId } = req.params;
+    const chats = getChatList(userId);
+    res.json({ success: true, chats });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Получить сообщения с пользователем
+router.get('/messages/:user1Id/:user2Id', (req, res) => {
+  try {
+    const { user1Id, user2Id } = req.params;
+    const messages = getMessages(user1Id, user2Id);
+    markMessagesRead(user1Id, user2Id);
+    res.json({ success: true, messages });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Отправить сообщение
+router.post('/messages', (req, res) => {
+  try {
+    const { from, to, text, type } = req.body;
+    if (!from || !to || !text) {
+      return res.json({ success: false, message: 'Некорректные данные' });
+    }
+    const message = sendMessage(from, to, text, type || 'text');
+    res.json({ success: true, message });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Получить всех пользователей для поиска
+router.get('/users/search/:currentUserId', (req, res) => {
+  try {
+    const { currentUserId } = req.params;
+    const users = getAllUsersExcept(currentUserId);
+    res.json({ success: true, users });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

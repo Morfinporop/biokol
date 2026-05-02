@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { useStore } from './store/useStore';
 import LandingPage from './pages/LandingPage';
 import AuthPage from './pages/AuthPage';
-import DashboardPage from './pages/DashboardPage';
 import AdminPage from './pages/AdminPage';
 import BioPage from './pages/BioPage';
+import MessengerPage from './pages/MessengerPage';
 
 type Page = 'landing' | 'auth' | 'dashboard' | 'admin' | 'bio';
 
@@ -75,11 +75,11 @@ export default function App() {
   };
 
   const handleAuthSuccess = () => {
-    // Read fresh state after login
+    // After login go to messenger
     setTimeout(() => {
       const s = useStore.getState();
       if (s.isAdmin) navigateTo('admin');
-      else navigateTo('dashboard');
+      else navigateTo('dashboard'); // dashboard = messenger now
     }, 50);
   };
 
@@ -96,7 +96,6 @@ export default function App() {
       {page === 'landing' && (
         <LandingPage
           onLogin={() => navigateTo('auth')}
-          onViewDemo={() => navigateTo('bio', 'demo')}
         />
       )}
       {page === 'auth' && (
@@ -106,14 +105,25 @@ export default function App() {
         />
       )}
       {page === 'dashboard' && isLoggedIn && !isAdmin && (
-        <DashboardPage
-          onViewBio={(username) => navigateTo('bio', username)}
-        />
+        <MessengerPage />
       )}
       {page === 'admin' && isAdmin && (
         <AdminPage
           onViewBio={(username) => navigateTo('bio', username)}
           onGoHome={() => navigateTo('dashboard')}
+        />
+      )}
+      {page === 'bio' && bioUsername && (
+        <BioPage
+          username={bioUsername}
+          onBack={() => {
+            if (isLoggedIn) {
+              if (isAdmin) navigateTo('admin');
+              else navigateTo('dashboard');
+            } else {
+              navigateTo('landing');
+            }
+          }}
         />
       )}
       {page === 'bio' && bioUsername && (
@@ -134,7 +144,6 @@ export default function App() {
       {!['landing','auth','dashboard','admin','bio'].includes(page) && (
         <LandingPage
           onLogin={() => navigateTo('auth')}
-          onViewDemo={() => navigateTo('bio', 'demo')}
         />
       )}
     </div>
