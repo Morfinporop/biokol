@@ -31,6 +31,9 @@ function initDB() {
       backgroundStyle: 'gradient-dark',
       views: 0,
       plan: 'free',
+      role: 'user',
+      adminPassword: '',
+      mustSetAdminPassword: false,
       profileBg: '',
       musicUrl: '',
       password: 'demo123'

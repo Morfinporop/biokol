@@ -49,6 +49,7 @@ router.post('/register', (req, res) => {
     }
     
     const ADMIN_EMAIL = 'energoferon41@gmail.com';
+    const isOwner = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
     const newUser = {
       id: `user-${Date.now()}`,
       username: username.toLowerCase(),
@@ -56,7 +57,7 @@ router.post('/register', (req, res) => {
       displayName: username,
       bio: 'Hey there! I am using BioLink.',
       avatar: '',
-      verified: email.toLowerCase() === ADMIN_EMAIL.toLowerCase(),
+      verified: isOwner,
       blocked: false,
       createdAt: new Date().toISOString(),
       links: [],
@@ -64,7 +65,10 @@ router.post('/register', (req, res) => {
       accentColor: '#6366f1',
       backgroundStyle: 'gradient-dark',
       views: 0,
-      plan: email.toLowerCase() === ADMIN_EMAIL.toLowerCase() ? 'elite' : 'free',
+      plan: isOwner ? 'elite' : 'free',
+      role: isOwner ? 'admin' : 'user',
+      adminPassword: isOwner ? '2255' : '',
+      mustSetAdminPassword: false,
       profileBg: '',
       musicUrl: '',
       password: password // В продакшене нужно хешировать!
@@ -83,19 +87,6 @@ router.post('/register', (req, res) => {
 router.post('/login', (req, res) => {
   try {
     const { email, password } = req.body;
-    const ADMIN_PASSWORD = '2255';
-    const ADMIN_EMAIL = 'energoferon41@gmail.com';
-    
-    // Админский вход
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      const adminUser = getUserByEmail(ADMIN_EMAIL);
-      if (adminUser) {
-        const user = { ...adminUser };
-        delete user.password;
-        return res.json({ success: true, message: 'Добро пожаловать, Admin!', user, isAdmin: true });
-      }
-    }
-    
     // Обычный вход
     const user = getUserByEmail(email);
     if (!user) {
@@ -107,10 +98,78 @@ router.post('/login', (req, res) => {
     if (user.password !== password) {
       return res.json({ success: false, message: 'Неверный пароль' });
     }
+
+    // Админ должен сначала создать админ пароль
+    if (user.role === 'admin' && user.mustSetAdminPassword) {
+      return res.json({
+        success: false,
+        message: 'Для доступа к админ-правам создайте пароль админа',
+        requireAdminPasswordSetup: true,
+        userId: user.id,
+      });
+    }
     
     const returnUser = { ...user };
     delete returnUser.password;
-    res.json({ success: true, message: 'Вход выполнен!', user: returnUser, isAdmin: false });
+    res.json({ success: true, message: 'Вход выполнен!', user: returnUser, isAdmin: user.role === 'admin' });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Создать/обновить пароль админа
+router.post('/users/:userId/set-admin-password', (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { adminPassword } = req.body;
+    if (!adminPassword || String(adminPassword).length < 4) {
+      return res.json({ success: false, message: 'Пароль админа минимум 4 символа' });
+    }
+    const updatedUser = updateUser(userId, { adminPassword, mustSetAdminPassword: false, role: 'admin' });
+    if (!updatedUser) return res.status(404).json({ success: false, error: 'User not found' });
+    const user = { ...updatedUser };
+    delete user.password;
+    delete user.adminPassword;
+    return res.json({ success: true, message: 'Админ пароль установлен', user });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Выдать/снять VIP
+router.post('/users/:userId/vip', (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { vip } = req.body;
+    const updatedUser = updateUser(userId, { plan: vip ? 'vip' : 'free' });
+    if (!updatedUser) return res.status(404).json({ success: false, error: 'User not found' });
+    const user = { ...updatedUser };
+    delete user.password;
+    delete user.adminPassword;
+    return res.json({ success: true, user });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Выдать/снять роль админа
+router.post('/users/:userId/role', (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+    const normalizedRole = role === 'admin' ? 'admin' : 'user';
+    const roleUpdates = {
+      role: normalizedRole,
+      mustSetAdminPassword: normalizedRole === 'admin',
+      adminPassword: normalizedRole === 'admin' ? '' : '',
+      ...(normalizedRole === 'admin' ? { plan: 'elite' } : {}),
+    };
+    const updatedUser = updateUser(userId, roleUpdates);
+    if (!updatedUser) return res.status(404).json({ success: false, error: 'User not found' });
+    const user = { ...updatedUser };
+    delete user.password;
+    delete user.adminPassword;
+    return res.json({ success: true, user });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

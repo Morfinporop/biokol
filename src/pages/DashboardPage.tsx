@@ -722,16 +722,17 @@ export default function DashboardPage({ onViewBio }: Props) {
                 <h3 className="text-white font-semibold mb-1">Ваш биолинк</h3>
                 <p className="text-gray-500 text-xs mb-4">Поделитесь этой ссылкой</p>
                 <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <span className="text-indigo-400 text-sm flex-1 font-mono">{window.location.origin}/@{user.username}</span>
+                  <span className="text-indigo-400 text-sm flex-1 font-mono">bio.o/{user.username}</span>
                   <button
                     onClick={async () => {
+                      const realUrl = `${window.location.origin}/@${user.username}`;
                       try {
-                        await navigator.clipboard.writeText(`${window.location.origin}/@${user.username}`);
+                        await navigator.clipboard.writeText(realUrl);
                         alert('Ссылка скопирована!');
                       } catch (err) {
                         // Fallback для старых браузеров
                         const textArea = document.createElement('textarea');
-                        textArea.value = `${window.location.origin}/@${user.username}`;
+                        textArea.value = realUrl;
                         textArea.style.position = 'fixed';
                         textArea.style.left = '-999999px';
                         document.body.appendChild(textArea);
@@ -753,6 +754,7 @@ export default function DashboardPage({ onViewBio }: Props) {
                     </svg>
                   </button>
                 </div>
+                <p className="text-gray-600 text-xs mt-2">Короткий адрес bio.o/{user.username} ведет на {window.location.origin}/@{user.username}</p>
               </div>
 
               <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">

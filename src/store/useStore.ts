@@ -26,7 +26,9 @@ export interface BioUser {
   accentColor: string;
   backgroundStyle: string;
   views: number;
-  plan: 'free' | 'pro' | 'elite';
+  plan: 'free' | 'pro' | 'vip' | 'elite';
+  role?: 'user' | 'admin';
+  mustSetAdminPassword?: boolean;
   profileBg: string;
   musicUrl: string;
 }
@@ -34,13 +36,14 @@ export interface BioUser {
 interface AppState {
   currentUser: BioUser | null;
   users: BioUser[];
+  usersLoaded: boolean;
   isLoggedIn: boolean;
   isAdmin: boolean;
   currentPage: string;
   viewingBio: string | null;
   
   loadUsers: () => Promise<void>;
-  login: (email: string, password: string) => Promise<{ success: boolean; message: string; isAdmin?: boolean }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; message: string; isAdmin?: boolean; requireAdminPasswordSetup?: boolean; userId?: string }>;
   register: (email: string, username: string, password: string) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   updateBio: (data: Partial<BioUser>) => Promise<void>;
@@ -110,6 +113,7 @@ const saved = loadState();
 export const useStore = create<AppState>((set, get) => ({
   currentUser: saved?.currentUser || null,
   users: saved?.users || initialUsers,
+  usersLoaded: false,
   isLoggedIn: saved?.isLoggedIn || false,
   isAdmin: saved?.isAdmin || false,
   currentPage: 'home',
@@ -121,7 +125,7 @@ export const useStore = create<AppState>((set, get) => ({
       const syncedCurrentUser = s.currentUser
         ? users.find((u) => u.id === s.currentUser?.id) || s.currentUser
         : null;
-      const ns = { ...s, users, currentUser: syncedCurrentUser };
+      const ns = { ...s, users: users.length ? users : s.users, currentUser: syncedCurrentUser, usersLoaded: true };
       saveState(ns);
       return ns;
     });
@@ -137,7 +141,13 @@ export const useStore = create<AppState>((set, get) => ({
         return ns;
       });
     }
-    return { success: result.success, message: result.message || '', isAdmin: result.isAdmin };
+    return {
+      success: result.success,
+      message: result.message || '',
+      isAdmin: result.isAdmin,
+      requireAdminPasswordSetup: result.requireAdminPasswordSetup,
+      userId: result.userId,
+    };
   },
 
   register: async (email, username, password) => {

@@ -8,7 +8,7 @@ interface Props {
 }
 
 export default function BioPage({ username, onBack }: Props) {
-  const { users } = useStore();
+  const { users, usersLoaded } = useStore();
   const [animIn, setAnimIn] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -16,13 +16,27 @@ export default function BioPage({ username, onBack }: Props) {
   const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
 
   useEffect(() => {
-    if (user) {
-      document.title = `${user.username} - BioLink`;
-    }
+    if (!user) return;
+    const name = user.username;
+    let i = 1;
+    document.title = `${name.slice(0, 1)} - BioLink`;
+    const t = setInterval(() => {
+      i = i >= name.length ? 1 : i + 1;
+      document.title = `${name.slice(0, i)} - BioLink`;
+    }, 260);
     return () => {
+      clearInterval(t);
       document.title = 'BioLink — Ссылки под рукой';
     };
   }, [user]);
+
+  if (!usersLoaded) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-gray-400">
+        Загрузка профиля...
+      </div>
+    );
+  }
 
   useEffect(() => {
     // Принудительное обновление из store при монтировании
@@ -287,12 +301,14 @@ export default function BioPage({ username, onBack }: Props) {
           </div>
 
           {/* Footer */}
-          <div className="mt-10 flex flex-col items-center gap-2">
-            <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-xs group">
-              <img src="/logo.png" alt="BioLink" className="w-4 h-4 rounded" />
-              <span>Создано с <span className="text-indigo-400">BioLink</span> — бесплатно</span>
-            </button>
-          </div>
+          {(user.plan !== 'elite' && user.plan !== 'vip') && (
+            <div className="mt-10 flex flex-col items-center gap-2">
+              <button onClick={onBack} className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors text-xs group">
+                <img src="/logo.png" alt="BioLink" className="w-4 h-4 rounded" />
+                <span>Создано с <span className="text-indigo-400">BioLink</span> — бесплатно</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

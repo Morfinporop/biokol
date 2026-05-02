@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import FloatingIcons from '../components/FloatingIcons';
+import * as api from '../services/api';
 
 // Simple math captcha
 function generateCaptcha() {
@@ -26,6 +27,8 @@ export default function AuthPage({ onSuccess, onBack }: Props) {
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
+  const [pendingAdminUserId, setPendingAdminUserId] = useState<string | null>(null);
+  const [adminPass, setAdminPass] = useState('');
 
   // Admin special mode
   const isAdminEmail = email.toLowerCase() === 'energoferon41@gmail.com';
@@ -61,6 +64,12 @@ export default function AuthPage({ onSuccess, onBack }: Props) {
 
     if (mode === 'login') {
       const result = await login(email, password);
+      if (result.requireAdminPasswordSetup && result.userId) {
+        setPendingAdminUserId(result.userId);
+        setError('Для админ-прав нужно создать пароль админа');
+        setLoading(false);
+        return;
+      }
       if (result.success) {
         setSuccess(result.message);
         setTimeout(onSuccess, 800);
@@ -83,6 +92,29 @@ export default function AuthPage({ onSuccess, onBack }: Props) {
         setError(result.message);
         refreshCaptcha();
       }
+    }
+    setLoading(false);
+  };
+
+  const handleAdminPasswordSetup = async () => {
+    if (!pendingAdminUserId || adminPass.length < 4) {
+      setError('Пароль админа минимум 4 символа');
+      return;
+    }
+    setLoading(true);
+    const setup = await api.setAdminPassword(pendingAdminUserId, adminPass);
+    if (!setup.success) {
+      setError(setup.message || 'Ошибка установки пароля админа');
+      setLoading(false);
+      return;
+    }
+    const relogin = await login(email, password);
+    if (relogin.success) {
+      setSuccess('Админ-пароль сохранен. Вход выполнен.');
+      setPendingAdminUserId(null);
+      setTimeout(onSuccess, 700);
+    } else {
+      setError(relogin.message);
     }
     setLoading(false);
   };
@@ -147,6 +179,25 @@ export default function AuthPage({ onSuccess, onBack }: Props) {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {pendingAdminUserId && (
+              <div className="space-y-3 rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-4">
+                <label className="block text-xs text-indigo-300 font-medium uppercase tracking-wider">Создайте пароль админа</label>
+                <input
+                  type="password"
+                  value={adminPass}
+                  onChange={(e) => setAdminPass(e.target.value)}
+                  placeholder="Минимум 4 символа"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/60 transition-all text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={handleAdminPasswordSetup}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 rounded-xl transition-all text-sm"
+                >
+                  Сохранить пароль админа
+                </button>
+              </div>
+            )}
             {/* Email */}
             <div>
               <label className="block text-xs text-gray-400 mb-1.5 font-medium uppercase tracking-wider">Email</label>

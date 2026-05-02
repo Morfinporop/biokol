@@ -126,6 +126,7 @@ export default function LandingPage({ onLogin, onViewDemo }: Props) {
         </div>
 
         <p className="text-gray-600 text-xs mt-5">Регистрация за 30 секунд. Кредитная карта не нужна.</p>
+        <p className="text-gray-500 text-xs mt-3">У нас есть один минус: хостинг из-за границы, поэтому может быть пинг. Мы активно это улучшаем.</p>
       </section>
 
       {/* URL preview */}

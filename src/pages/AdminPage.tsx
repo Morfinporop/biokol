@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useStore } from '../store/useStore';
+import * as api from '../services/api';
 
 interface Props {
   onViewBio: (username: string) => void;
@@ -9,7 +10,7 @@ interface Props {
 type AdminTab = 'dashboard' | 'users' | 'pages';
 
 export default function AdminPage({ onViewBio, onGoHome }: Props) {
-  const { users, logout, blockUser, unblockUser, deleteUser } = useStore();
+  const { users, logout, blockUser, unblockUser, deleteUser, loadUsers } = useStore();
   const [tab, setTab] = useState<AdminTab>('dashboard');
   const [search, setSearch] = useState('');
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
@@ -242,6 +243,10 @@ export default function AdminPage({ onViewBio, onGoHome }: Props) {
                         <td className="px-6 py-4">
                           {u.blocked ? (
                             <span className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-lg">Заблокирован</span>
+                          ) : u.role === 'admin' ? (
+                            <span className="text-xs text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded-lg">Админ</span>
+                          ) : u.plan === 'vip' ? (
+                            <span className="text-xs text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-1 rounded-lg">VIP</span>
                           ) : u.verified ? (
                             <span className="text-xs text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-1 rounded-lg">Верифицирован</span>
                           ) : (
@@ -280,6 +285,30 @@ export default function AdminPage({ onViewBio, onGoHome }: Props) {
                                 </svg>
                               </button>
                             )}
+                            <button
+                              onClick={async () => {
+                                await api.setUserVip(u.id, u.plan !== 'vip');
+                                await loadUsers();
+                              }}
+                              className={`p-1.5 rounded-lg transition-all ${u.plan === 'vip' ? 'text-yellow-400 hover:bg-yellow-500/10' : 'text-gray-400 hover:text-yellow-400 hover:bg-yellow-500/10'}`}
+                              title={u.plan === 'vip' ? 'Снять VIP' : 'Выдать VIP'}
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+                              </svg>
+                            </button>
+                            <button
+                              onClick={async () => {
+                                await api.setUserRole(u.id, u.role === 'admin' ? 'user' : 'admin');
+                                await loadUsers();
+                              }}
+                              className={`p-1.5 rounded-lg transition-all ${u.role === 'admin' ? 'text-indigo-400 hover:bg-indigo-500/10' : 'text-gray-400 hover:text-indigo-400 hover:bg-indigo-500/10'}`}
+                              title={u.role === 'admin' ? 'Снять роль админа' : 'Выдать роль админа'}
+                            >
+                              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M12 2l3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z" />
+                              </svg>
+                            </button>
                             {confirmDelete === u.id ? (
                               <div className="flex items-center gap-1">
                                 <button

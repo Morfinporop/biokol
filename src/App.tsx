@@ -54,6 +54,7 @@ export default function App() {
 
   const navigateTo = (p: Page, username?: string) => {
     if (p === 'bio' && username) {
+      useStore.getState().loadUsers();
       setBioUsername(username);
       setViewingBio(username);
       window.history.pushState({}, '', `/@${username}`);
