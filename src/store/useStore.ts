@@ -113,22 +113,27 @@ const saved = loadState();
 export const useStore = create<AppState>((set, get) => ({
   currentUser: saved?.currentUser || null,
   users: saved?.users || initialUsers,
-  usersLoaded: false,
+  usersLoaded: saved?.users ? true : false,
   isLoggedIn: saved?.isLoggedIn || false,
   isAdmin: saved?.isAdmin || false,
   currentPage: 'home',
   viewingBio: null,
   
   loadUsers: async () => {
-    const users = await api.fetchAllUsers();
-    set((s) => {
-      const syncedCurrentUser = s.currentUser
-        ? users.find((u) => u.id === s.currentUser?.id) || s.currentUser
-        : null;
-      const ns = { ...s, users: users.length ? users : s.users, currentUser: syncedCurrentUser, usersLoaded: true };
-      saveState(ns);
-      return ns;
-    });
+    try {
+      const users = await api.fetchAllUsers();
+      set((s) => {
+        const syncedCurrentUser = s.currentUser
+          ? users.find((u) => u.id === s.currentUser?.id) || s.currentUser
+          : null;
+        const ns = { ...s, users: users.length ? users : s.users, currentUser: syncedCurrentUser, usersLoaded: true };
+        saveState(ns);
+        return ns;
+      });
+    } catch (e) {
+      console.error('Failed to load users:', e);
+      set((s) => ({ ...s, usersLoaded: true }));
+    }
   },
 
   login: async (email, password) => {

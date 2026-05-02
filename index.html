@@ -1,14 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BioLink — Ссылки под рукой</title>
     <meta name="description" content="Создайте бесплатную страницу со ссылками для своего профиля. Делитесь всеми ссылками в одном месте. Современный, красивый, бесплатный навсегда." />
+    
+    <!-- Open Graph / Discord / Telegram Preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="BioLink" />
+    <meta property="og:title" content="BioLink — Профиль пользователя" />
+    <meta property="og:description" content="Создайте бесплатную страницу со ссылками для своего профиля" />
+    <meta property="og:url" content="https://bio.o/" />
+    <meta property="og:image" content="/logo.png" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="BioLink — Профиль пользователя" />
+    <meta name="twitter:description" content="Создайте бесплатную страницу со ссылками для своего профиля" />
+    <meta name="twitter:image" content="/logo.png" />
+    
+    <!-- Favicon -->
     <link rel="icon" href="/logo.png" type="image/png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    
+    <!-- Dynamic meta tags will be injected by React -->
+    <script id="dynamic-meta"></script>
   </head>
   <body>
     <div id="root"></div>

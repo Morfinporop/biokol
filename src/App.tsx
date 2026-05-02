@@ -14,34 +14,39 @@ export default function App() {
   const [bioUsername, setBioUsername] = useState<string>('');
 
   const parseRoute = () => {
-    const path = window.location.pathname;
-    const bioMatch = path.match(/^\/(?:bio\/|u\/|@|bio\.o\/)?([a-zA-Z0-9_]{3,20})$/);
-    if (bioMatch && bioMatch[1] && !['auth', 'dashboard', 'admin'].includes(bioMatch[1])) {
-      setBioUsername(bioMatch[1]);
-      setPage('bio');
-      return;
+    try {
+      const path = window.location.pathname;
+      const bioMatch = path.match(/^\/(?:bio\/|u\/|@|bio\.o\/)?([a-zA-Z0-9_]{3,20})$/);
+      if (bioMatch && bioMatch[1] && !['auth', 'dashboard', 'admin'].includes(bioMatch[1])) {
+        setBioUsername(bioMatch[1]);
+        setPage('bio');
+        return;
+      }
+      if (path === '/auth' || path === '/login') {
+        setPage('auth');
+        return;
+      }
+      if (path === '/dashboard') {
+        if (isLoggedIn && !isAdmin) setPage('dashboard');
+        else if (isAdmin) setPage('admin');
+        else setPage('auth');
+        return;
+      }
+      if (path === '/admin') {
+        if (isAdmin) setPage('admin');
+        else setPage('auth');
+        return;
+      }
+      setPage('landing');
+    } catch (e) {
+      console.error('Route parse error:', e);
+      setPage('landing');
     }
-    if (path === '/auth' || path === '/login') {
-      setPage('auth');
-      return;
-    }
-    if (path === '/dashboard') {
-      if (isLoggedIn && !isAdmin) setPage('dashboard');
-      else if (isAdmin) setPage('admin');
-      else setPage('auth');
-      return;
-    }
-    if (path === '/admin') {
-      if (isAdmin) setPage('admin');
-      else setPage('auth');
-      return;
-    }
-    setPage('landing');
   };
 
   // Загрузка пользователей при старте
   useEffect(() => {
-    loadUsers();
+    loadUsers().catch(console.error);
   }, [loadUsers]);
 
   // Handle URL routing for bio pages
@@ -57,7 +62,8 @@ export default function App() {
       useStore.getState().loadUsers();
       setBioUsername(username);
       setViewingBio(username);
-      window.history.pushState({}, '', `/@${username}`);
+      // Используем bio.o/username для красивого URL
+      window.history.pushState({}, '', `/bio.o/${username}`);
     } else if (p === 'landing') {
       window.history.pushState({}, '', '/');
     } else if (p === 'auth') {

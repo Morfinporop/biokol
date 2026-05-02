@@ -11,29 +11,64 @@ export default function BioPage({ username, onBack }: Props) {
   const { users, usersLoaded } = useStore();
   const [animIn, setAnimIn] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [loading, setLoading] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
 
   useEffect(() => {
+    setLoading(!usersLoaded && !user);
+    const timeout = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(timeout);
+  }, [usersLoaded, user]);
+
+  useEffect(() => {
     if (!user) return;
+    
+    // Анимация заголовка по буквам
     const name = user.username;
     let i = 1;
+    const title = `BioLink — Профиль ${name}`;
     document.title = `${name.slice(0, 1)} - BioLink`;
     const t = setInterval(() => {
       i = i >= name.length ? 1 : i + 1;
       document.title = `${name.slice(0, i)} - BioLink`;
     }, 260);
+    
+    // Обновляем Open Graph meta tags для соцсетей
+    const baseUrl = window.location.origin;
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    const ogUrl = document.querySelector('meta[property="og:url"]');
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    const twTitle = document.querySelector('meta[name="twitter:title"]');
+    const twDesc = document.querySelector('meta[name="twitter:description"]');
+    const twImage = document.querySelector('meta[name="twitter:image"]');
+    
+    if (ogTitle) ogTitle.setAttribute('content', title);
+    if (ogDesc) ogDesc.setAttribute('content', user.bio || `Страница ссылок ${user.displayName}`);
+    if (ogUrl) ogUrl.setAttribute('content', `${baseUrl}/bio.o/${name}`);
+    if (ogImage) ogImage.setAttribute('content', user.avatar ? user.avatar : `${baseUrl}/logo.png`);
+    if (twTitle) twTitle.setAttribute('content', title);
+    if (twDesc) twDesc.setAttribute('content', user.bio || `Страница ссылок ${user.displayName}`);
+    if (twImage) twImage.setAttribute('content', user.avatar ? user.avatar : `${baseUrl}/logo.png`);
+    
     return () => {
       clearInterval(t);
       document.title = 'BioLink — Ссылки под рукой';
+      // Сбрасываем meta tags
+      if (ogTitle) ogTitle.setAttribute('content', 'BioLink — Профиль пользователя');
+      if (ogDesc) ogDesc.setAttribute('content', 'Создайте бесплатную страницу со ссылками для своего профиля');
     };
   }, [user]);
 
-  if (!usersLoaded) {
+  if (loading && !user) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-gray-400">
-        Загрузка профиля...
+        <div className="text-center">
+          <div className="animate-pulse text-lg mb-2">Загрузка профиля...</div>
+          <div className="text-xs text-gray-600">@{username}</div>
+        </div>
       </div>
     );
   }

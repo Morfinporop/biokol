@@ -725,14 +725,14 @@ export default function DashboardPage({ onViewBio }: Props) {
                   <span className="text-indigo-400 text-sm flex-1 font-mono">bio.o/{user.username}</span>
                   <button
                     onClick={async () => {
-                      const realUrl = `${window.location.origin}/@${user.username}`;
+                      // Копируем красивый URL bio.o/username
+                      const shortUrl = `${window.location.origin}/bio.o/${user.username}`;
                       try {
-                        await navigator.clipboard.writeText(realUrl);
+                        await navigator.clipboard.writeText(shortUrl);
                         alert('Ссылка скопирована!');
                       } catch (err) {
-                        // Fallback для старых браузеров
                         const textArea = document.createElement('textarea');
-                        textArea.value = realUrl;
+                        textArea.value = shortUrl;
                         textArea.style.position = 'fixed';
                         textArea.style.left = '-999999px';
                         document.body.appendChild(textArea);
@@ -754,7 +754,9 @@ export default function DashboardPage({ onViewBio }: Props) {
                     </svg>
                   </button>
                 </div>
-                <p className="text-gray-600 text-xs mt-2">Короткий адрес bio.o/{user.username} ведет на {window.location.origin}/@{user.username}</p>
+                <p className="text-gray-600 text-xs mt-2">
+                  <span className="text-green-400 font-medium">bio.o/{user.username}</span> — ваш уникальный адрес
+                </p>
               </div>
 
               <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
