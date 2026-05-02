@@ -140,9 +140,9 @@ export default function LandingPage({ onLogin, onViewDemo }: Props) {
             </div>
           </div>
           <div className="bg-white/5 rounded-xl px-4 py-2.5 font-mono text-sm text-indigo-300 border border-white/5">
-            bio.o/<span className="text-white font-bold">yourname</span>
+            biolink.up.railway.app/@<span className="text-white font-bold">yourname</span>
           </div>
-          <p className="text-gray-500 text-xs mt-3">Ваш персональный адрес будет выглядеть вот так</p>
+          <p className="text-gray-500 text-xs mt-3">Ваш персональный адрес</p>
         </div>
       </section>
 

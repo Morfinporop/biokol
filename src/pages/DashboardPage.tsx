@@ -722,17 +722,18 @@ export default function DashboardPage({ onViewBio }: Props) {
                 <h3 className="text-white font-semibold mb-1">Ваш биолинк</h3>
                 <p className="text-gray-500 text-xs mb-4">Поделитесь этой ссылкой</p>
                 <div className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <span className="text-indigo-400 text-sm flex-1 font-mono">bio.o/{user.username}</span>
+                  <span className="text-indigo-400 text-sm flex-1 font-mono truncate">
+                    biolink.up.railway.app/@{user.username}
+                  </span>
                   <button
                     onClick={async () => {
-                      // Копируем красивый URL bio.o/username
-                      const shortUrl = `${window.location.origin}/bio.o/${user.username}`;
+                      const url = `${window.location.origin}/@${user.username}`;
                       try {
-                        await navigator.clipboard.writeText(shortUrl);
+                        await navigator.clipboard.writeText(url);
                         alert('Ссылка скопирована!');
                       } catch (err) {
                         const textArea = document.createElement('textarea');
-                        textArea.value = shortUrl;
+                        textArea.value = url;
                         textArea.style.position = 'fixed';
                         textArea.style.left = '-999999px';
                         document.body.appendChild(textArea);
@@ -741,12 +742,12 @@ export default function DashboardPage({ onViewBio }: Props) {
                           document.execCommand('copy');
                           alert('Ссылка скопирована!');
                         } catch (e) {
-                          alert('Не удалось скопировать ссылку');
+                          alert('Не удалось скопировать');
                         }
                         document.body.removeChild(textArea);
                       }
                     }}
-                    className="text-gray-400 hover:text-white transition-colors"
+                    className="text-gray-400 hover:text-white transition-colors flex-shrink-0"
                   >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
@@ -755,7 +756,7 @@ export default function DashboardPage({ onViewBio }: Props) {
                   </button>
                 </div>
                 <p className="text-gray-600 text-xs mt-2">
-                  <span className="text-green-400 font-medium">bio.o/{user.username}</span> — ваш уникальный адрес
+                  Ваш уникальный адрес в BioLink
                 </p>
               </div>
 

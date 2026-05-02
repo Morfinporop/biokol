@@ -62,8 +62,7 @@ export default function App() {
       useStore.getState().loadUsers();
       setBioUsername(username);
       setViewingBio(username);
-      // Используем bio.o/username для красивого URL
-      window.history.pushState({}, '', `/bio.o/${username}`);
+      window.history.pushState({}, '', `/@${username}`);
     } else if (p === 'landing') {
       window.history.pushState({}, '', '/');
     } else if (p === 'auth') {
