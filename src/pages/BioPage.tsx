@@ -8,19 +8,27 @@ interface Props {
 }
 
 export default function BioPage({ username, onBack }: Props) {
-  const { users, usersLoaded } = useStore();
+  const { users } = useStore();
   const [animIn, setAnimIn] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
-  const [loading, setLoading] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const user = users.find(u => u.username.toLowerCase() === username.toLowerCase());
 
-  useEffect(() => {
-    setLoading(!usersLoaded && !user);
-    const timeout = setTimeout(() => setLoading(false), 3000);
-    return () => clearTimeout(timeout);
-  }, [usersLoaded, user]);
+  // Показываем профиль сразу, даже если данные еще грузятся
+  // 404 только если точно нет пользователя
+  if (!user && users.length > 0) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex flex-col items-center justify-center gap-4">
+        <div className="text-6xl font-black text-white/10">404</div>
+        <div className="text-white text-xl font-semibold">Пользователь не найден</div>
+        <p className="text-gray-500 text-sm">@{username} не существует</p>
+        <button onClick={onBack} className="mt-4 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-medium transition-all">
+          На главную
+        </button>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -62,16 +70,7 @@ export default function BioPage({ username, onBack }: Props) {
     };
   }, [user]);
 
-  if (loading && !user) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center text-gray-400">
-        <div className="text-center">
-          <div className="animate-pulse text-lg mb-2">Загрузка профиля...</div>
-          <div className="text-xs text-gray-600">@{username}</div>
-        </div>
-      </div>
-    );
-  }
+
 
   useEffect(() => {
     // Принудительное обновление из store при монтировании

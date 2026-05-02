@@ -13,48 +13,47 @@ export default function App() {
   const [page, setPage] = useState<Page>('landing');
   const [bioUsername, setBioUsername] = useState<string>('');
 
-  const parseRoute = () => {
-    try {
-      const path = window.location.pathname;
-      const bioMatch = path.match(/^\/(?:bio\/|u\/|@|bio\.o\/)?([a-zA-Z0-9_]{3,20})$/);
-      if (bioMatch && bioMatch[1] && !['auth', 'dashboard', 'admin'].includes(bioMatch[1])) {
-        setBioUsername(bioMatch[1]);
-        setPage('bio');
-        return;
-      }
-      if (path === '/auth' || path === '/login') {
-        setPage('auth');
-        return;
-      }
-      if (path === '/dashboard') {
-        if (isLoggedIn && !isAdmin) setPage('dashboard');
-        else if (isAdmin) setPage('admin');
-        else setPage('auth');
-        return;
-      }
-      if (path === '/admin') {
-        if (isAdmin) setPage('admin');
-        else setPage('auth');
-        return;
-      }
-      setPage('landing');
-    } catch (e) {
-      console.error('Route parse error:', e);
-      setPage('landing');
-    }
-  };
-
   // Загрузка пользователей при старте
   useEffect(() => {
     loadUsers().catch(console.error);
   }, [loadUsers]);
 
-  // Handle URL routing for bio pages
+  // Роутинг
   useEffect(() => {
-    parseRoute();
-    const onPop = () => parseRoute();
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
+    const handleRoute = () => {
+      try {
+        const path = window.location.pathname;
+        const bioMatch = path.match(/^\/(?:bio\/|u\/|@|bio\.o\/)?([a-zA-Z0-9_]{3,20})$/);
+        if (bioMatch && bioMatch[1] && !['auth', 'dashboard', 'admin'].includes(bioMatch[1])) {
+          setBioUsername(bioMatch[1]);
+          setPage('bio');
+          return;
+        }
+        if (path === '/auth' || path === '/login') {
+          setPage('auth');
+          return;
+        }
+        if (path === '/dashboard') {
+          if (isLoggedIn && !isAdmin) setPage('dashboard');
+          else if (isAdmin) setPage('admin');
+          else setPage('auth');
+          return;
+        }
+        if (path === '/admin') {
+          if (isAdmin) setPage('admin');
+          else setPage('auth');
+          return;
+        }
+        setPage('landing');
+      } catch (e) {
+        console.error('Route error:', e);
+        setPage('landing');
+      }
+    };
+
+    handleRoute();
+    window.addEventListener('popstate', handleRoute);
+    return () => window.removeEventListener('popstate', handleRoute);
   }, [isLoggedIn, isAdmin]);
 
   const navigateTo = (p: Page, username?: string) => {
